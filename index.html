@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Upload CSV</title>
+    <style>
+        body {
+            color: #fff;
+            background: #F0F0F0;
+            font-family: 'Roboto', sans-serif;
+        }
+        .banner {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            margin: 2rem;
+        }
+        .uploadSection {
+            background: #008080;
+            padding: 3rem;
+            border-radius: 1rem;
+        }
+        #jsonHeader {
+            display:none;
+            background: #008080;
+            padding: 3rem;
+            border-radius: 1rem;
+            margin: 0 1.5rem;
+        }
+        #jsonResult {
+            white-space: pre-wrap;
+        }
+        #uploadForm {
+            display:flex;
+            justify-content: space-between;
+        }
+        button {
+            background-color: #FFA500;
+            color: #FFFFFF;
+            border: none;
+            padding: 10px 20px;
+            cursor: pointer;
+            font-size: 1rem;
+            border-radius: 5px;
+        }
+        .file-input-wrapper {
+            position: relative;
+            overflow: hidden;
+            display: inline-block;
+            cursor: pointer;
+        }
+        .file-input-wrapper input[type="file"] {
+            width:0;
+            opacity: 0;
+        }
+        .file-input-label {
+            background-color: #00BFFF; /* Light Blue */
+            color: #FFFFFF;
+            padding: 10px 20px;
+            cursor: pointer;
+            font-size: 1rem;
+            border-radius: 5px;
+            display: inline-block;
+        }
+        .file-info {
+            padding:5px;
+        }
+        .file-info .tick-icon {
+            color: #FFA500;
+            margin-left: 10px;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="banner">
+        <div class="uploadSection">
+            <h1>Upload CSV and Convert to JSON</h1>
+            <form action="upload.php" method="post" enctype="multipart/form-data" id="uploadForm">
+                <div class="file-input-wrapper">
+                    <label for="csvfile" class="file-input-label">Upload CSV</label>
+                    <input type="file" name="csvfile" id="csvfile" accept=".csv" onchange="updateFileName()" required>
+                </div>
+                <button type="submit">Convert</button>
+            </form>
+            <div class="file-info" id="fileInfo">
+                <span id="fileName"></span>
+                <span class="tick-icon" id="tickIcon">&#10004;</span>
+            </div>
+        </div>
+
+    </div>
+
+    <div id="jsonHeader">
+        <h2>Converted JSON</h2>
+        <button onclick="copyToClipboard()">Copy text</button>
+        <button onclick="resetPage()">Reset</button>
+        <pre id="jsonResult"></pre>
+    </div>
+
+    
+    <script>
+        document.getElementById('uploadForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+
+            var fileInput = document.getElementById('csvfile');
+            var file = fileInput.files[0];
+            var maxSize = 2 * 1024 * 1024; // 2MB in bytes
+
+            if (file.size > maxSize) {
+                alert('File size exceeds 2MB limit.');
+                return;
+            }
+
+            var formData = new FormData();
+            formData.append('csvfile', file);
+
+            var xhr = new XMLHttpRequest();
+            xhr.open('POST', 'upload.php', true);
+
+            xhr.onload = function() {
+                if (xhr.status === 200) {
+                    document.getElementById('jsonResult').textContent = xhr.responseText;
+                    document.getElementById('jsonResult').style.display = 'block';
+                    document.getElementById('jsonHeader').style.display = 'block';
+                } else {
+                    document.getElementById('jsonResult').textContent = 'An error occurred during the upload.';
+                    document.getElementById('jsonResult').style.display = 'none';
+                }
+            };
+
+            xhr.send(formData);
+        });
+
+        function copyToClipboard() {
+            var copyText = document.getElementById("jsonResult").textContent;
+            navigator.clipboard.writeText(copyText)
+            alert("Copied the text");
+        }
+
+        function updateFileName() {
+            var input = document.getElementById('csvfile');
+            var fileName = input.files[0].name;
+            document.getElementById('fileName').textContent = fileName;
+            document.getElementById('tickIcon').style.display = 'inline';
+        }
+
+        function resetPage() {
+            var input = document.getElementById('csvfile');
+            var fileNameElement = document.getElementById('fileName');
+            var tickIconElement = document.getElementById('tickIcon');
+            
+            input.value = '';
+
+            fileNameElement.textContent = '';
+            tickIconElement.style.display = 'none';
+            document.getElementById('jsonResult').style.display = 'none';
+        }
+    </script>
+</body>
+</html>
+
+
